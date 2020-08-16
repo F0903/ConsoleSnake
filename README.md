@@ -1,2 +1,3 @@
 # ConsoleSnake
 Snake in the console.
+Quite simple really...
