@@ -4,21 +4,38 @@
 
 using uint = unsigned int;
 
+enum class Direction
+{
+	Up,
+	Left,
+	Down,
+	Right
+};
+
 struct Controls
 {
 	char upKey, leftKey, downKey, rightKey;
 };
 
+struct Coord
+{
+	Coord(uint x, uint y) : x(x), y(y) {}
+	uint x, y;
+};
+
 struct Snake
 {
 	Snake(uint startX, uint startY)
-		: posX(startX), posY(startY), previousX(startX), previousY(startY), tailLength(0)
-	{}
+		: pos(startX, startY)
+	{
+		// The top one is needed due to the end link occupying the same space as the next. This is a temp solution
+		tailPositions.Instantiate(startX, startY); // First Link
+		tailPositions.Instantiate(startX, startY); // End of tail.
+	}
 
-	uint posX, posY;
-	uint previousX, previousY;
+	Coord pos;
 
-	uint tailLength;
+	VectorSlim<Coord> tailPositions = VectorSlim<Coord>();
 
 	char headSymbol = 'O';
 	char tailSymbol = 'o';
@@ -26,7 +43,7 @@ struct Snake
 
 struct Fruit
 {
-	Fruit(uint startX, uint startY, int value)
+	Fruit(uint startX, uint startY, int value = 1)
 		: posX(startX), posY(startY), value(value)
 	{}
 
@@ -39,11 +56,12 @@ class SnakeGame
 {
 	private:
 	Controls controls;
+	Direction currentDirection = Direction::Up;
 	Snake snake;
 	VectorSlim<Fruit> fruits;
 	int score;
 
-	bool displayFps = true;
+	bool displayFps = false;
 
 	ConsoleOutput* consoleOut = &ConsoleOutput::Normal;
 
@@ -54,19 +72,24 @@ class SnakeGame
 	SnakeGame(Controls controls, uint width, uint height);
 
 	private:
-	void SetCursorPos(uint x, uint y);
-	void ClearConsole();
+	void SetCursorPos(Coord coords);
 	void SetCursor(bool visible, uint size);
 
+	void AddTail();
+	void AddFruits(int n);
+	void MoveFruit(Fruit& fruit);
 	void Init();
 
-	bool HandleInput();
+	void HandleInput();
 	void CheckForFruitOverlap();
+	bool CheckForGameOver();
+
+	void Reset();
 
 	void DrawGrid();
-	void DrawFruits();
 	void DrawSnake();
 	void DrawScore();
+	void DrawGameOver();
 
 	public:
 	bool Update();

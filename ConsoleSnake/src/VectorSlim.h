@@ -28,7 +28,7 @@ class VectorSlim
 
 		for (size_t i = 0; i < amount; i++)
 		{
-			auto elem = data[i];
+			auto&& elem = std::move(data[i]);
 			newData[i] = std::move(elem);
 			elem.~T();
 		}
@@ -76,6 +76,16 @@ class VectorSlim
 		return *obj;
 	}
 
+	void PlaceFirst(const T& elem)
+	{
+		//TODO
+	}
+
+	void PlaceFirst(T&& elem)
+	{
+		//TODO
+	}
+
 	void Add(const T& elem)
 	{
 		if (size >= capacity)
@@ -92,39 +102,57 @@ class VectorSlim
 
 	T&& Remove(int index)
 	{
-		T&& item = std::move(data[index]);
-		data[index].~T();
 		if (index == size)
 		{
+			T&& elem = std::move(data[index]);
+			data[index].~T();
 			--size;
-			return std::move(item);
+			return std::move(elem);
 		}
-		
-		T&& end = std::move(data[size]);
-		data[size].~T();
-		data[index] = end;
 
+		T&& elem = std::move(data[index]);
+		data[index].~T();
+		for (size_t i = index; i < size; i++)
+		{
+			data[i] = data[i + 1];
+		}
 		--size;
-		return std::move(item);
+		return std::move(elem);
 	}
 
 	const T& Get(int index) const
 	{
+	#ifdef _DEBUG
+		if (index >= size)
+			throw std::exception("Index is larger than collection.");
+	#endif		
 		return data[index];
 	}
 
 	T& Get(int index)
 	{
+	#ifdef _DEBUG
+		if (index >= size)
+			throw std::exception("Index is larger than collection.");
+	#endif		
 		return data[index];
 	}
 
 	const T& operator[](size_t index) const
 	{
+	#ifdef _DEBUG
+		if (index >= size)
+			throw std::exception("Index is larger than collection.");
+	#endif		
 		return data[index];
 	}
 
 	T& operator[](size_t index)
 	{
+	#ifdef _DEBUG
+		if (index >= size)
+			throw std::exception("Index is larger than collection.");
+	#endif		
 		return data[index];
 	}
 };

@@ -25,7 +25,7 @@ int main(int argCount, const char** args)
 	controls.downKey = 's';
 	controls.rightKey = 'd';
 
-	auto game = SnakeGame(controls, 20, 20);
+	auto game = SnakeGame(controls, 50, 20);
 	while (game.Update())
 	{
 	}

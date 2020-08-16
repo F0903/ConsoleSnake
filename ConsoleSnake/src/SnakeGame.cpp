@@ -1,5 +1,6 @@
 #include <iostream>
 #include <thread>
+#include <sstream>
 
 // WIN32
 #include <io.h>
@@ -17,63 +18,83 @@ SnakeGame::SnakeGame(Controls controls, uint width, uint height)
 	Init();
 }
 
-void SnakeGame::Init()
+void SnakeGame::AddTail()
 {
-	_setmode(_fileno(stdout), _O_U16TEXT);
-	consoleOut = &ConsoleOutput::Wide;
-	SetCursor(false, 1);
+	snake.tailPositions.Add(snake.pos);
+}
 
-	for (size_t i = 0; i < 3; i++)
+void SnakeGame::AddFruits(int n)
+{
+	for (size_t i = 0; i < n; i++)
 	{
 		uint x = (uint)rand() % (width - 1);
-		if (x == snake.posX)
+		if (x == width - 1) --x;
+		if (x == 0) ++x;
+		if (x == snake.pos.x)
 		{
-			if (x < width - 1) ++x;
-			else if (x > 1) --x;
+			if (snake.pos.x == 1) ++x;
+			else --x;
 		}
 
 		uint y = (uint)rand() % (height - 1);
-		if (y == snake.posY)
+		if (y == height - 1) --y;
+		if (y == 0) ++y;
+		if (y == snake.pos.y)
 		{
-			if (y < height - 1) ++y;
-			else if (y > 1) --y;
+			if (snake.pos.y == 1) ++y;
+			else --y;
 		}
 
-		fruits.Instantiate(x, y, 1);
+		const auto& fruit = fruits.Instantiate(x, y);
+		SetCursorPos(Coord(fruit.posX, fruit.posY));
+		*consoleOut << fruit.symbol;
+	}
+}
+
+void SnakeGame::MoveFruit(Fruit& fruit)
+{
+	uint x = (uint)rand() % (width - 1);
+	if (x == width - 1) --x;
+	if (x == 0) ++x;
+	if (x == snake.pos.x)
+	{
+		if (snake.pos.x == 1) ++x;
+		else --x;
 	}
 
+	uint y = (uint)rand() % (height - 1);
+	if (y == height - 1) --y;
+	if (y == 0) ++y;
+	if (y == snake.pos.y)
+	{
+		if (snake.pos.y == 1) ++y;
+		else --y;
+	}
+
+	fruit.posX = x;
+	fruit.posY = y;
+	SetCursorPos(Coord(fruit.posX, fruit.posY));
+	*consoleOut << fruit.symbol;
+}
+
+void SnakeGame::Init()
+{
+	auto _ = _setmode(_fileno(stdout), _O_U16TEXT);
+	consoleOut = &ConsoleOutput::Wide;
+	SetCursor(false, 1);
+
 	DrawGrid();
-	DrawFruits();
+	AddFruits((width + height) / 10);
 	DrawSnake();
 	DrawScore();
 }
 
-void SnakeGame::SetCursorPos(uint x, uint y)
+void SnakeGame::SetCursorPos(Coord coords)
 {
 	static const auto console = GetStdHandle(STD_OUTPUT_HANDLE);
 	consoleOut->Flush();
-	COORD coord = { x, y };
-	SetConsoleCursorPosition(console, coord);
-}
-
-void SnakeGame::ClearConsole() // WIN32
-{
-	static const auto console = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	COORD topLeft = { 0, 0 };
-
-	consoleOut->Flush();
-
-	if (!GetConsoleScreenBufferInfo(console, &csbi))
-		throw "Could not retrieve console buffer info.";
-
-	DWORD writeSize = csbi.dwSize.X * csbi.dwSize.Y;
-	DWORD count;
-
-	FillConsoleOutputCharacter(console, TEXT(' '), writeSize, topLeft, &count);
-	FillConsoleOutputAttribute(console, csbi.wAttributes, writeSize, topLeft, &count);
-	SetConsoleCursorPosition(console, topLeft);
+	COORD winCoords = { coords.x, coords.y };
+	SetConsoleCursorPosition(console, winCoords);
 }
 
 void SnakeGame::SetCursor(bool visible, uint size) // WIN32
@@ -87,11 +108,31 @@ void SnakeGame::SetCursor(bool visible, uint size) // WIN32
 	SetConsoleCursorInfo(console, &info);
 }
 
+void SnakeGame::Reset()
+{
+	system("cls"); // WIN32
+	DrawGrid();
+	snake.pos = Coord(width / 2, height / 2);
+	
+	snake.tailPositions.Clear();
+	snake.tailPositions.Add(snake.pos); // Comments in the header to why this is neccesary
+	snake.tailPositions.Add(snake.pos);
+
+	currentDirection = Direction::Up;
+	score = 0;
+
+	fruits.Clear();
+	AddFruits((width + height) / 10);
+}
+
 void SnakeGame::DrawGrid()
 {
+	// #######
+	// #     #
+	// #     #
+	// #######
 	constexpr char verticalBorderChar = '#';
 	constexpr char horizontalBorderChar = '#';
-	constexpr char topLeftCornerBoderChar = '#';
 	for (size_t y = 0; y <= height; y++)
 	{
 		for (size_t x = 0; x <= width; x++)
@@ -114,86 +155,127 @@ void SnakeGame::DrawGrid()
 	}
 }
 
-bool SnakeGame::HandleInput() // WIN32
+void SnakeGame::HandleInput()
 {
-	if (!_kbhit()) return false;
+	snake.tailPositions[0] = Coord(snake.pos.x, snake.pos.y);
+	for (size_t i = snake.tailPositions.GetSize() - 1; i > 0; i--)
+		snake.tailPositions[i] = snake.tailPositions[i - 1];
 
-	snake.previousX = snake.posX;
-	snake.previousY = snake.posY;
+	if (_kbhit()) // WIN32
+	{
+		char ch = _getch();
+		if (ch == controls.upKey && currentDirection != Direction::Down)
+			currentDirection = Direction::Up;
+		else if (ch == controls.leftKey && currentDirection != Direction::Right)
+			currentDirection = Direction::Left;
+		else if (ch == controls.downKey && currentDirection != Direction::Up)
+			currentDirection = Direction::Down;
+		else if (ch == controls.rightKey && currentDirection != Direction::Left)
+			currentDirection = Direction::Right;
+	}
 
-	char ch = _getch();
-	if (ch == controls.upKey)
+	switch (currentDirection)
 	{
-		if (snake.posY == 1) return false;
-		--snake.posY;
+		case Direction::Up:
+			--snake.pos.y;
+			break;
+
+		case Direction::Left:
+			--snake.pos.x;
+			break;
+
+		case Direction::Down:
+			++snake.pos.y;
+			break;
+
+		case Direction::Right:
+			++snake.pos.x;
+			break;
+
+		default:
+			break;
 	}
-	else if (ch == controls.leftKey)
-	{
-		if (snake.posX == 1) return false;
-		--snake.posX;
-	}
-	else if (ch == controls.downKey)
-	{
-		if (snake.posY == height - 1) return false;
-		++snake.posY;
-	}
-	else if (ch == controls.rightKey)
-	{
-		if (snake.posX == width - 1) return false;
-		++snake.posX;
-	}
-	return true;
 }
 
 void SnakeGame::CheckForFruitOverlap()
 {
 	for (size_t i = 0; i < fruits.GetSize(); i++)
 	{
-		const auto& elem = fruits[i];
-		if (!(elem.posX == snake.posX && elem.posY == snake.posY))
+		auto& elem = fruits[i];
+		if (!(elem.posX == snake.pos.x && elem.posY == snake.pos.y))
 			continue;
 
 		score += elem.value;
-		++snake.tailLength;
-		DrawScore();
+		MoveFruit(elem);
+		AddTail();
 
-		fruits.Remove(i);
+		DrawScore();
 	}
 }
 
-void SnakeGame::DrawFruits()
+bool SnakeGame::CheckForGameOver()
 {
-	for (size_t i = 0; i < fruits.GetSize(); i++)
-	{
-		const auto& elem = fruits[i];
+	if (snake.pos.x == 0 || snake.pos.x == width)
+		return true;
 
-		SetCursorPos(elem.posX, elem.posY);
-		*consoleOut << elem.symbol;
-	}
+	if (snake.pos.y == 0 || snake.pos.y == height)
+		return true;
+
+	/*for (size_t i = 4; i < snake.tailPositions.GetSize(); i++)
+	{
+		const auto& elem = snake.tailPositions[i];
+		if (snake.pos.x == elem.x && snake.pos.y == elem.y)
+			return true;
+	}*/
+	return false;
 }
 
 void SnakeGame::DrawSnake()
 {
-	SetCursorPos(snake.previousX, snake.previousY);
-	*consoleOut << ' ';
-
-	SetCursorPos(snake.posX, snake.posY);
+	SetCursorPos(snake.pos);
 	*consoleOut << snake.headSymbol;
+
+	for (size_t i = 0; i < snake.tailPositions.GetSize(); i++)
+	{
+		auto coord = snake.tailPositions[i];
+		SetCursorPos(coord);
+		if (i == snake.tailPositions.GetSize() - 1)
+			*consoleOut << ' ';
+		else
+			*consoleOut << snake.tailSymbol;
+	}
 }
 
 void SnakeGame::DrawScore()
 {
-	auto scoreText = "score ";
-	SetCursorPos((width / 2) - (strlen(scoreText) / 2), height);
-	*consoleOut << scoreText << score;
+	std::stringstream scoreText;
+	scoreText << "|SCORE " << score << "|";
+	auto scoreStr = scoreText.str();
+	SetCursorPos(Coord((width / 2) - (scoreStr.size() / 2), height));
+	*consoleOut << scoreStr;
+}
+
+void SnakeGame::DrawGameOver()
+{
+	system("cls"); // WIN32
+	SetCursorPos(Coord(0, 0));
+	*consoleOut << "GAME OVER\n" << "Final Score: " << score << "\n\nPress any button to continue...";
 }
 
 bool SnakeGame::Update()
 {
-	if (HandleInput())
+	if (!CheckForGameOver())
 	{
+		HandleInput();
 		DrawSnake();
 		CheckForFruitOverlap();
+		std::this_thread::sleep_for(100ms);
+	}
+	else
+	{
+		DrawGameOver();
+		while (!_getch()) { std::this_thread::sleep_for(250ms); }
+		Reset();
 	}
 	return true;
 }

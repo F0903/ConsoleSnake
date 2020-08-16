@@ -14,13 +14,11 @@ class ConsoleOutput
 	virtual void Flush() = 0;
 
 	virtual ConsoleOutput& operator<<(const char* out) = 0;
-	//virtual ConsoleOutput& operator<<(char out) = 0;
+	virtual ConsoleOutput& operator<<(const std::string& out) = 0;
 	virtual ConsoleOutput& operator<<(const char& out) = 0;
 	virtual ConsoleOutput& operator<<(char&& out) = 0;
-	//virtual ConsoleOutput& operator<<(int out) = 0;
 	virtual ConsoleOutput& operator<<(const int& out) = 0;
 	virtual ConsoleOutput& operator<<(int&& out) = 0;
-	//virtual ConsoleOutput& operator<<(unsigned int out) = 0;
 	virtual ConsoleOutput& operator<<(const unsigned int& out) = 0;
 	virtual ConsoleOutput& operator<<(unsigned int&& out) = 0;
 };
@@ -37,13 +35,11 @@ class ConsoleOutput::WideConsoleOutput : public ConsoleOutput
 	void Flush() override;
 
 	ConsoleOutput& operator<<(const char* out) override;
-	//ConsoleOutput& operator<<(char out) override;
+	ConsoleOutput& operator<<(const std::string& out) override;
 	ConsoleOutput& operator<<(const char& out) override;
 	ConsoleOutput& operator<<(char&& out) override;
-	//ConsoleOutput& operator<<(int out) override;
 	ConsoleOutput& operator<<(const int& out) override;
 	ConsoleOutput& operator<<(int&& out) override;
-	//ConsoleOutput& operator<<(unsigned int out) override;
 	ConsoleOutput& operator<<(const unsigned int& out) override;
 	ConsoleOutput& operator<<(unsigned int&& out) override;
 };
@@ -60,13 +56,11 @@ class ConsoleOutput::NormalConsoleOutput : public ConsoleOutput
 	void Flush() override;
 
 	ConsoleOutput& operator<<(const char* out) override;
-	//ConsoleOutput& operator<<(char out) override;
+	ConsoleOutput& operator<<(const std::string& out) override;
 	ConsoleOutput& operator<<(const char& out) override;
 	ConsoleOutput& operator<<(char&& out) override;
-	//ConsoleOutput& operator<<(int out) override;
 	ConsoleOutput& operator<<(const int& out) override;
 	ConsoleOutput& operator<<(int&& out) override;
-	//ConsoleOutput& operator<<(unsigned int out) override;
 	ConsoleOutput& operator<<(const unsigned int& out) override;
 	ConsoleOutput& operator<<(unsigned int&& out) override;
 };

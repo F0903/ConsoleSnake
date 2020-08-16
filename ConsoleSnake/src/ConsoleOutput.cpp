@@ -20,11 +20,11 @@ ConsoleOutput& ConsoleOutput::WideConsoleOutput::operator<<(const char* out)
 	return *this;
 }
 
-//ConsoleOutput& ConsoleOutput::WideConsoleOutput::operator<<(char out)
-//{
-//	output << out;
-//	return *this;
-//}
+ConsoleOutput& ConsoleOutput::WideConsoleOutput::operator<<(const std::string& out)
+{
+	output << out.c_str();
+	return *this;
+}
 
 ConsoleOutput& ConsoleOutput::WideConsoleOutput::operator<<(const char& out)
 {
@@ -38,11 +38,6 @@ ConsoleOutput& ConsoleOutput::WideConsoleOutput::operator<<(char&& out)
 	return *this;
 }
 
-//ConsoleOutput& ConsoleOutput::WideConsoleOutput::operator<<(int out)
-//{
-//	output << out;
-//	return *this;
-//}
 
 ConsoleOutput& ConsoleOutput::WideConsoleOutput::operator<<(const int& out)
 {
@@ -55,13 +50,6 @@ ConsoleOutput& ConsoleOutput::WideConsoleOutput::operator<<(int&& out)
 	output << out;
 	return *this;
 }
-
-
-//ConsoleOutput& ConsoleOutput::WideConsoleOutput::operator<<(unsigned int out)
-//{
-//	output << out;
-//	return *this;
-//}
 
 ConsoleOutput& ConsoleOutput::WideConsoleOutput::operator<<(const unsigned int& out)
 {
@@ -93,11 +81,11 @@ ConsoleOutput& ConsoleOutput::NormalConsoleOutput::operator<<(const char* out)
 	return *this;
 }
 
-//ConsoleOutput& ConsoleOutput::NormalConsoleOutput::operator<<(char out)
-//{
-//	output << out;
-//	return *this;
-//}
+ConsoleOutput& ConsoleOutput::NormalConsoleOutput::operator<<(const std::string& out)
+{
+	output << out.c_str();
+	return *this;
+}
 
 ConsoleOutput& ConsoleOutput::NormalConsoleOutput::operator<<(const char& out)
 {
@@ -111,12 +99,6 @@ ConsoleOutput& ConsoleOutput::NormalConsoleOutput::operator<<(char&& out)
 	return *this;
 }
 
-//ConsoleOutput& ConsoleOutput::NormalConsoleOutput::operator<<(int out)
-//{
-//	output << out;
-//	return *this;
-//}
-
 ConsoleOutput& ConsoleOutput::NormalConsoleOutput::operator<<(const int& out)
 {
 	output << out;
@@ -128,12 +110,6 @@ ConsoleOutput& ConsoleOutput::NormalConsoleOutput::operator<<(int&& out)
 	output << out;
 	return *this;
 }
-
-//ConsoleOutput& ConsoleOutput::NormalConsoleOutput::operator<<(unsigned int out)
-//{
-//	output << out;
-//	return *this;
-//}
 
 ConsoleOutput& ConsoleOutput::NormalConsoleOutput::operator<<(const unsigned int& out)
 {
