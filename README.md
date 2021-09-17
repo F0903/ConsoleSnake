@@ -1,3 +1,3 @@
 # ConsoleSnake
-Snake in the console.
-Quite simple really...
+Small and fun snake game that runs in your console.
+Controls are simply WASD.
